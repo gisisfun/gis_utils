@@ -215,7 +215,7 @@ def ref_files_poly_wt(json_files_path='jsonfiles', slash='/', def_file='datasets
     ref_data = datasets['DataSets']['OpenStreetMaps']['ShapeFormat']
     file_deploy(ref_data)
 
-def coords_from_csv_latin1(file_name , lon_col, lat_col, csv_files_path='csvfiles', slash='/',):
+def coords_from_csv_latin1(file_name , lon_col, lat_col, csv_files_path='csv', slash='/',):
     """
     Reads files with illegal characters causing errors
 
@@ -260,7 +260,7 @@ def coords_from_csv_latin1(file_name , lon_col, lat_col, csv_files_path='csvfile
     coords = [(x, y) for x, y in zip(longs, lats)]
     return coords
 
-def coords_from_csv(file_name, lon_col, lat_col,csv_files_path='csvfiles', slash='/'):
+def coords_from_csv(file_name, lon_col, lat_col,csv_files_path='csv', slash='/'):
     """
     Reads standard csv files
 
@@ -287,7 +287,7 @@ def coords_from_csv(file_name, lon_col, lat_col,csv_files_path='csvfiles', slash
         quoting=csv.QUOTE_MINIMAL)
 
 
-    with open('{}{}{}'.format(self.csv_files_path, self.slash, file_name), 
+    with open('{}{}{}'.format(csv_files_path, slash, file_name), 
               newline='', encoding='utf-8') \
               as csvfile:
         data = list(csv.reader(csvfile, dialect='mydialect'))
@@ -759,13 +759,13 @@ def points_and_polygons(g_array):
         point_list: array of points with id, x and y values
     """
 
-    (point_list, num_poly) = ([], len(g_array))
+    point_list = []
 
     for poly in iter(g_array):
-        num_coords = len(poly['geometry']['coordinates'][0])-2
+        #num_coords = len(poly['geometry']['coordinates'][0])-2
         poly_id = poly['properties']['p']
         #for i in range(0, num_coords):
-        for i in inter(poly['geometry']['coordinates'][0][:-2]):
+        for i in iter(poly['geometry']['coordinates'][0][:-2]):
             point_list.append( \
                 [poly_id, 
                  str(poly['geometry']['coordinates'][0][i][0]) + \
@@ -773,7 +773,7 @@ def points_and_polygons(g_array):
     return point_list
 
 
-def neighbours(points_list):
+def neighbours(points_list, file_name, csv_files_path='csv', slash='/'):
     """
     Intersecting polygons list
 
@@ -789,8 +789,8 @@ def neighbours(points_list):
 
     point_df = pd.DataFrame(points_list)
     point_df.columns = ['poly', 'latlong']
-    point_df.to_csv('{}{}{}_points.csv'.format(self.csv_files_path, 
-                    self.slash, self.filename), sep=',')
+    point_df.to_csv('{}{}{}_points.csv'.format(csv_files_path, 
+                    slash, file_name), sep=',')
     point_df_a = point_df  # make copy of dataframe
     process_point_df = pd.merge(point_df, point_df_a, on='latlong')
     # merge columns of same dataframe on concatenated latlong
@@ -801,10 +801,12 @@ def neighbours(points_list):
                       copy().sort_values(by=['poly_x']).drop_duplicates()
     #just leave polygon greferences and filter output
 
-    output_point_df.to_csv('{}{}{}_neighbours.csv' \
-                           .format(self.csv_files_path, self.slash, 
-                                   self.filename), \
-                           sep=',', index=False)
+    output_point_df.to_csv('{}{}{}_neighbours.csv'. \
+                           format(csv_files_path, \
+                                  slash, \
+                                  file_name), \
+                           sep=',', \
+                           index=False)
 
 
 def random_points_in_polygon(poly):
