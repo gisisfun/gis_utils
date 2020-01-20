@@ -116,7 +116,6 @@ def f_name(shape, radial):
         Text string 'shape'_'radial'km
     """
 
-    #print(self.shape + '_' + str(self.radial) + 'km')
     return shape + '_' + str(radial) + 'km'
 
 
@@ -138,9 +137,12 @@ def file_deploy(resource_data, slash='/'):
         print('Downloading {} file in {} file format'\
               .format(resource_data['format'], resource_data['description']))
 
-        urllib.request.urlretrieve(resource_data['down_url'],
-                                   resource_data['zip_path'].\
-                                   replace('/', slash))
+        try:
+            urllib.request.urlretrieve(resource_data['down_url'],
+                                       resource_data['zip_path'].\
+                                       replace('/', slash))
+        except urllib.error.HTTPError:
+            print("URL not found")
         if resource_data['zip_path'].endswith('zip') is True:
             print('Unzipping {} file in {} file format'\
                 .format(resource_data['description'], resource_data['format']))
