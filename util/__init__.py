@@ -3,6 +3,7 @@ General file and data support for geospatial text and binary data sets
 """
 
 import os
+import subprocess
 import csv
 import urllib.request
 import json
@@ -116,6 +117,7 @@ def f_name(shape, radial):
         Text string 'shape'_'radial'km
     """
 
+    #print(self.shape + '_' + str(self.radial) + 'km')
     return shape + '_' + str(radial) + 'km'
 
 
@@ -152,70 +154,47 @@ def file_deploy(resource_data, slash='/'):
     else:
         print('{} file in {} file format exists'\
               .format(resource_data['description'], resource_data['format']))
-
-
-def ref_files_polygons(path_datasets, slash, def_file):
+        
+def read_text_file(file_name, files_path, slash = '/'):
     """
-    Get reference files for polygons.py
-
-    Input:
-        json_files_path: path to diectory with json formatted files
-        slash: os dependant directory delimiter:
-               forward slash '/' - 'posix'
-               backwards slash '\\' - 'nt'
-        file_name: name of defintions file in 'json' format with .json' extension
-
-    Output:
-        files dwonloaded if necessary and deployed to file system
+    
     """
-    def_file = 'datasets.json'
-    datasets = from_json_file(path_datasets, def_file)
-    ref_data = datasets['DataSets']['Australia']['ShapeFormat']
-    file_deploy(ref_data)
+    file = open("{}{}{}.txt".format(files_path, slash, \
+                file_name), "r")
+    file_text = file.read()
+    file.close()
 
-    ref_data = datasets['DataSets']['AGILDataset']['CSVFormat']
-    file_deploy(ref_data)
-
-    ref_data = datasets['DataSets']['MBSP']['CSVFormat']
-    file_deploy(ref_data)
-
-    ref_data = datasets['DataSets']['NASAActiveFireData']['ModisC61km']['CSVFormat']
-    file_deploy(ref_data)
+    return str(file_text)
 
 
-def ref_files_poly_wt(json_files_path='jsonfiles', slash='/', def_file='datasets'):
+def write_text_file(file_name, file_text, files_path, slash = '/'):
     """
-    Get reference files for poly_wt.py
-
-    Input:
-        json_files_path: path to diectory with json formatted files
-        slash: os dependant directory delimiter:
-               forward slash '/' - 'posix'
-               backwards slash '\\' - 'nt'
-        file_name: name of defintions file in 'json' format with .json' extension
-
-    Output:
-        files dwonloaded if necessary and deployed to file system
+    
     """
-    def_file = 'datasets.json'
-    datasets = from_json_file(json_files_path, slash, def_file + '.json')
+    file = open("{}{}{}.txt".format(files_path, slash, \
+                file_name), "w")
+    file.write(str(file_text))
+    file.close()
 
-    ref_data = datasets['DataSets']['Australia']['ShapeFormat']
-    file_deploy(ref_data)
 
-    ref_data = datasets['DataSets']['StatisticalAreasLevel12011']['ShapeFormat']
-    file_deploy(ref_data)
+def run_sql_file_to_db(sql_file, db_name, sqlite_files_path='spatialite', \
+                       slash='/', sqlite_com='sqlite'):
+    """
+    Execute SQLite code using the sqlite3 shell command
 
-    ref_data = datasets['DataSets']['StatisticalAreasLevel12016']['ShapeFormat']
-    file_deploy(ref_data)
+    sqlite3 spatialite_path/db_name.sqlite < spatialite_path/sql_file.txt
 
-    ref_data = datasets['DataSets']['AGILDataset']['CSVFormat']
-    file_deploy(ref_data)
+    sql_file:
+    db_name:
+    """
 
-    ref_data = datasets['DataSets']['OpenStreetMaps']['ShapeFormat']
-    file_deploy(ref_data)
+    the_sql = read_text_file(sql_file, sqlite_files_path, slash)
+    cmd_text ="{}  {}{}{}.db".format(sqlite_com, sqlite_files_path, slash, 
+               db_name).replace('/'.slash)
+    subprocess.check_output( [cmd_text], input=bytes(the_sql.encode("utf-8")))
 
-def coords_from_csv_latin1(file_name , lon_col, lat_col, csv_files_path='csv', slash='/',):
+def coords_from_csv_latin1(file_name , lon_col, lat_col, csv_files_path='csv',\
+                           slash='/',):
     """
     Reads files with illegal characters causing errors
 
@@ -606,7 +585,7 @@ def to_shp_file(g_array, file_name, shape_files_path='shapefiles', slash='/'):
 #            classed = True
 #    return the_breaks_ref
 
-def apply_classification(g_array,ref_col):
+def apply_classification(g_array, ref_col):
     """
     Apply cloreplath colour classification range to array of geojson polygon data
 
@@ -662,7 +641,9 @@ def apply_classification(g_array,ref_col):
     return colour_breaks
 
 
-def to_kml_file(g_array, file_name, the_key="No_Key", kml_files_path='kmlfiles', slash='/'):
+def to_kml_file(g_array, file_name, \
+                kml_files_path='kmlfiles', slash='/', \
+                the_key="No_Key"):
     """
     Writes geojson Polygon array to kml file
 
@@ -759,7 +740,7 @@ def points_and_polygons(g_array):
         point_list: array of points with id, x and y values
     """
 
-    point_list = []
+    point_list= []
 
     for poly in iter(g_array):
         #num_coords = len(poly['geometry']['coordinates'][0])-2
@@ -773,7 +754,7 @@ def points_and_polygons(g_array):
     return point_list
 
 
-def neighbours(points_list, file_name, csv_files_path='csv', slash='/'):
+def neighbours(points_list, file_name, csv_files_path='csv' ,slash='/'):
     """
     Intersecting polygons list
 
@@ -801,10 +782,9 @@ def neighbours(points_list, file_name, csv_files_path='csv', slash='/'):
                       copy().sort_values(by=['poly_x']).drop_duplicates()
     #just leave polygon greferences and filter output
 
-    output_point_df.to_csv('{}{}{}_neighbours.csv'. \
-                           format(csv_files_path, \
-                                  slash, \
-                                  file_name), \
+    output_point_df.to_csv('{}{}{}_neighbours.csv' \
+                           .format(csv_files_path, slash, 
+                                   file_name), \
                            sep=',', \
                            index=False)
 
