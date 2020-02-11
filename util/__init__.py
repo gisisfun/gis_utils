@@ -9,6 +9,7 @@ import json
 from pyunpack import Archive
 import numpy as np
 import shapefile
+from geographiclib.geodesic import Geodesic
 from pycrs.load import from_file
 import simplekml
 from mapclassify import EqualInterval, NaturalBreaks, MaximumBreaks, \
@@ -20,6 +21,34 @@ import matplotlib.path as mpltPath
 from geojson import FeatureCollection, Polygon, Feature
 
 #https://automating-gis-processes.github.io/CSC18/lessons/L1/Intro-Python-GIS.html
+
+def polygon_area(poly):
+    #geod = Geodesic(6378388, 1/297.0) # the international ellipsoid
+    geod = Geodesic.WGS84
+    p = geod.Polygon()
+
+    poly = [
+            [-63.1, -58], [-72.9, -74], [-71.9,-102], [-74.9,-102], [-74.3,-131],
+            [-77.5,-163], [-77.4, 163], [-71.7, 172], [-65.9, 140], [-65.7, 113],
+            [-66.6,  88], [-66.9,  59], [-69.8,  25], [-70.0,  -4], [-71.0, -14],
+            [-77.3, -33], [-77.9, -46], [-74.7, -61]
+            ]
+    for pnt in poly:
+        p.AddPoint(pnt[0], pnt[1])
+    num, perim, area = p.Compute()
+    return area
+
+def point_radial_distance(coords, brng, radial):
+    """
+    Calulate next point from coordinates and bearing
+
+    Dependencies:
+    None
+    """
+    #geod = Geodesic(6378388, 1/297.0) # the international ellipsoid
+    geod = Geodesic.WGS84
+    g = geod.Direct(coords[0], coords[1], brng, radial * 1000)
+    return  g['lat2'], g['lon2']
 
 def tabular_dataframe(g_array):
     """
@@ -601,24 +630,6 @@ def to_shp_file(g_array, file_name, shape_files_path='shapefiles', slash='/'):
     prj.close()
 
 
-#def classify(class_list, break_value):
-#    """
-#    Class value for apply_classification function
-
-#    Input:
-#        class_list:
-#        break_value: minumum value of the reference chloreplath break value
-#
-#    Output:
-#        breaks_ref: value in class list greater than the break_value
-#    """
-#    classed = False
-#    for i, val in enumerate(class_list):
-#        if val >= break_value and classed is False:
-#            the_breaks_ref = val
-#            classed = True
-#    return the_breaks_ref
-
 def apply_classification(g_array, ref_col):
     """
     Apply cloreplath colour classification range to array of geojson polygon data
@@ -838,6 +849,24 @@ def add_poly_nb(g_array, poly_col):
 #                           index=False)
     return g_array
 
+def poly_drop(g_array,key):
+    """
+    Drop polygons by condition
+    
+    Input:
+    Input variables:
+        g_array: array of geojson polygon data
+        key: dictionary key for geojson polygon used to drop records
+        
+    Output:
+        isect_array: array of geojson polygon data with selected array rows        
+    """
+    isect_array = []
+
+    for poly_data in iter(g_array):
+        if poly_data['properties'][key] > 0:
+            isect_array.append(poly_data)
+    return isect_array
 
 def random_points_in_polygon(poly):
     """
