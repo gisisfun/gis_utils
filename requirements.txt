@@ -1,1 +1,15 @@
 
+os
+csv
+urllib
+json
+pyunpack
+numpy
+shapefile
+geographiclib
+pycrs
+simplekml
+mapclassify
+yaml
+pandas
+matplotlib
