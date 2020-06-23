@@ -1,0 +1,30 @@
+setup(name=
+'gis_utils'
+,
+version=
+'0.0.1'
+,
+description=
+'A GIS library not requiring GDAL functions'
+,
+author=
+'Damien Clarke'
+,
+author_email=
+'damien.clarke@gmail.com'
+,
+packages=['gits_utils'],
+install_requires=['matplotlib',
+'csv',
+'json',
+'geographiclib',
+'pyunpack',
+'shapefile',
+'simplekml'.
+'mapclassify',
+'pycrs',
+'numpy',
+'yaml',
+'urllib.request',
+'simplekml',
+'pandas'])
